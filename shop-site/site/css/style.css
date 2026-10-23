@@ -22,7 +22,7 @@ body { margin: 0; font: 15px/1.45 var(--font); color: var(--ink); background: va
 a { color: var(--navy-2); }
 button, input, select { font: inherit; }
 img, svg { display: block; }
-.wrap { max-width: 1320px; margin: 0 auto; padding: 0 16px; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 [hidden] { display: none !important; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 
