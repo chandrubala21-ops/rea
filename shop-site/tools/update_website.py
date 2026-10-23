@@ -43,7 +43,7 @@ CHECK = "Check (ok / review / guess)"
 SETTINGS = "Website Settings"
 YES = {"yes", "y", "true", "1", "show"}
 # Billing lines in Busy that are not products: never added to the website.
-NON_PRODUCT = re.compile(r"cancel|labou?r|laber|charges?\b|transport|\btax\b|^cash$|\brent\b|mixing|freight|discount|round ?off", re.I)
+NON_PRODUCT = re.compile(r"\(delete\)|^[^a-z]*$|cancel|labou?r|laber|(?<![a-z])charges?\b|transport|\btax\b|^cash$|\brent\b|mixing|freight|discount|round ?off", re.I)
 RULES = {k: [(g, t, re.compile(p, re.I)) for g, t, p in v] for k, v in R.items()}
 OLD_DEPT = {v: k for k, v in DEPT_NAME.items()}
 
@@ -52,6 +52,13 @@ def yes(v, default=True):
     if v is None or (isinstance(v, float) and pd.isna(v)) or str(v).strip() == "":
         return default
     return str(v).strip().lower() in YES
+
+
+def code(v):
+    """A Busy item code (Alias) as text: 640241, '640241', 640241.0 are the same code."""
+    v = str(v).strip()
+    v = v[:-2] if v.endswith(".0") else v
+    return "" if v.lower() in ("", "nan", "none", "0") else v
 
 
 def norm(name):
@@ -64,7 +71,8 @@ COLS = {
     "price": r"^(sales?|selling)\s*(price|rate)?(\s*\(rs\))?$|^rate$|^price$",
     "mrp": r"^mrp(\s*\(rs\))?$",
     "unit": r"^units?$|^uom$|^main unit$",
-    "group": r"^(parent\s*)?group$|^item group$|^current group$",
+    "group": r"^(parent\s*)?group( name)?$|^item group$|^current group$",
+    "alias": r"^alias$|^item code$",
 }
 
 
@@ -139,6 +147,8 @@ def load(path):
         items.insert(1, SHOW, "Yes")
     if IN_BUSY not in items:
         items.insert(2, IN_BUSY, "")
+    if "Alias" not in items:
+        items.insert(3, "Alias", "")
     if SETTINGS not in sheets:
         depts = [d for d in bc.DEPT_ORDER if d in set(items["Department"])]
         brands = sorted(set(items["Brand"].dropna()) - {"Unbranded"}, key=str.lower)
@@ -164,7 +174,29 @@ def merge_busy(sheets, busy, cfg, report):
     items, menu = sheets["All Items"], sheets["Menu"]
     items["_norm"] = items["Item Name"].map(norm)
     b = busy.set_index(busy["name"].map(norm))
+    b = b[~b.index.duplicated()]
+    # Renamed in Busy: the same item code (Alias) under a new name. Take the new name and keep the
+    # item's category and Yes/No, instead of hiding the old one and adding a "new" one.
+    codes = busy.assign(c=busy["alias"].map(code))
+    codes = codes[codes["c"].ne("") & ~codes["c"].duplicated(keep=False)]
+    by_code = dict(zip(codes["c"], codes["name"]))
+    taken = set(items["_norm"])
+    renamed = []
+    for i in items.index[~items["_norm"].isin(b.index)]:
+        new_name = by_code.get(code(items.at[i, "Alias"]))
+        if new_name and norm(new_name) not in taken:
+            renamed.append(f"{items.at[i, 'Item Name']} -> {new_name}")
+            items.at[i, "Item Name"], items.at[i, "_norm"] = new_name, norm(new_name)
+            taken.add(norm(new_name))
     known = items["_norm"].isin(b.index)
+    items["Alias"] = items["Alias"].astype(object)
+    for i in items.index[known]:
+        c = code(b.loc[items.at[i, "_norm"], "alias"]) if "alias" in b else ""
+        if c:
+            items.at[i, "Alias"] = c
+    report.append(f"Renamed in Busy (same item code, new name): {len(renamed)}")
+    for line in renamed[:15]:
+        report.append(f"    {line}")
     items[IN_BUSY] = known.map({True: "Yes", False: "No"})
     changed = 0
     for i in items.index[known]:
@@ -189,7 +221,7 @@ def merge_busy(sheets, busy, cfg, report):
             continue
         d, g, t, how = classify(name, r["group"], items)
         d, g, t = tidy_category(d, g, t)
-        row = {"Item Name": name, SHOW: "Yes" if cfg["new_show"] else "No", IN_BUSY: "Yes",
+        row = {"Item Name": name, SHOW: "Yes" if cfg["new_show"] else "No", IN_BUSY: "Yes", "Alias": code(r.get("alias", "")),
                "Department": d, "Group": g, "Product Type": t, "Brand": brand_of(name, brands),
                "Selling Price (Rs)": bc.price(r["price"]) or None, "MRP (Rs)": bc.price(r["mrp"]) or None,
                "Units": str(r["unit"]).strip() if str(r["unit"]).strip() not in ("", "nan") else "pcs",
@@ -206,7 +238,8 @@ def merge_busy(sheets, busy, cfg, report):
     if new_rows:
         items = pd.concat([items, pd.DataFrame(new_rows)], ignore_index=True)
     if skipped:
-        report.append(f"Skipped (not products): {', '.join(skipped)}")
+        report.append(f"Skipped (not products: charges, cancelled, (DELETE), number-only names): {len(skipped)}")
+        report.append("    " + ", ".join(skipped[:12]) + (" ..." if len(skipped) > 12 else ""))
     report.append(f"New items added: {len(new_rows)}" + ("" if cfg["new_show"] else " (not shown until you set them to Yes)"))
     for r in new_rows[:30]:
         report.append(f"    {r['Item Name']}  ->  {r['Department']} > {r['Group']} > {r['Product Type']}")
