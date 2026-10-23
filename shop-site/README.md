@@ -63,7 +63,7 @@ Keep these in a `my-data` folder next to it (the folder is never uploaded to Git
 | File | What it is |
 | --- | --- |
 | `website_items.xlsx` | Your website item list. This is the master for the website. |
-| `item.xlsx` | Optional. A fresh item export from Busy. Brings in new items and new prices. |
+| `item.xlsx` | Optional. A fresh item export from Busy. Brings in new items and new prices. If it is missing, the shop's item master `../raw:/claude/item.xlsx` is read instead (never changed). Billing lines such as Labour Charges, Transportation or cancelled items are skipped. |
 | `database.txt` | Optional. The Supabase connection string, once the live site exists. |
 
 What you can change in `website_items.xlsx`:

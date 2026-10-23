@@ -3,7 +3,8 @@
 #
 # Put these in the my-data folder next to this file:
 #   website_items.xlsx   your website item list (Show on website column, Website Settings sheet)
-#   item.xlsx            optional: a fresh item export from Busy, for new items and new prices
+#   item.xlsx            optional: a fresh item export from Busy, for new items and new prices.
+#                        If it is not here, the shop's item master ../raw:/claude/item.xlsx is used (read only).
 #   database.txt         optional: the Supabase connection string, once the live site exists
 cd "$(dirname "$0")" || exit 1
 DATA="my-data"
@@ -27,7 +28,8 @@ if [ ! -x "$VENV/bin/python" ]; then
 fi
 
 ARGS=("$DATA/website_items.xlsx")
-[ -f "$DATA/item.xlsx" ] && ARGS+=(--busy "$DATA/item.xlsx")
+if [ -f "$DATA/item.xlsx" ]; then ARGS+=(--busy "$DATA/item.xlsx")
+elif [ -f "../raw:/claude/item.xlsx" ]; then ARGS+=(--busy "../raw:/claude/item.xlsx"); fi
 [ -f "$DATA/database.txt" ] && ARGS+=(--db "$DATA/database.txt")
 
 say "Updating the website..."

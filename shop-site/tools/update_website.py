@@ -42,6 +42,8 @@ IN_BUSY = "In Busy list"
 CHECK = "Check (ok / review / guess)"
 SETTINGS = "Website Settings"
 YES = {"yes", "y", "true", "1", "show"}
+# Billing lines in Busy that are not products: never added to the website.
+NON_PRODUCT = re.compile(r"cancel|labou?r|laber|charges?\b|transport|\btax\b|^cash$|\brent\b|mixing|freight|discount|round ?off", re.I)
 RULES = {k: [(g, t, re.compile(p, re.I)) for g, t, p in v] for k, v in R.items()}
 OLD_DEPT = {v: k for k, v in DEPT_NAME.items()}
 
@@ -179,8 +181,12 @@ def merge_busy(sheets, busy, cfg, report):
 
     brands = sorted(set(items["Brand"].dropna()) - {"Unbranded"}, key=len, reverse=True)
     new_rows = []
+    skipped = []
     for key, r in b[~b.index.isin(items["_norm"])].iterrows():
         name = r["name"]
+        if NON_PRODUCT.search(name):
+            skipped.append(name)
+            continue
         d, g, t, how = classify(name, r["group"], items)
         d, g, t = tidy_category(d, g, t)
         row = {"Item Name": name, SHOW: "Yes" if cfg["new_show"] else "No", IN_BUSY: "Yes",
@@ -199,6 +205,8 @@ def merge_busy(sheets, busy, cfg, report):
                                    "Filters shown on this page": ", ".join(filters_for(g, t)) + ", Price"}
     if new_rows:
         items = pd.concat([items, pd.DataFrame(new_rows)], ignore_index=True)
+    if skipped:
+        report.append(f"Skipped (not products): {', '.join(skipped)}")
     report.append(f"New items added: {len(new_rows)}" + ("" if cfg["new_show"] else " (not shown until you set them to Yes)"))
     for r in new_rows[:30]:
         report.append(f"    {r['Item Name']}  ->  {r['Department']} > {r['Group']} > {r['Product Type']}")
