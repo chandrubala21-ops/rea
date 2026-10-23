@@ -97,11 +97,16 @@ declare
   out text[] := '{}';
   a int; b int;
 begin
-  q := regexp_replace(lower(q), '(\d+\s*[x*]\s*)?\d+(\.\d+)?\s*sq\.?\s*mm\y', ' ', 'g');   -- cable sq mm is not a size
-  for m in select regexp_matches(q, '(\d+(?:\.\d+)?)\s*mm\y', 'g') loop
+  q := replace(replace(replace(lower(q), '½', ' 1/2'), '¼', ' 1/4'), '¾', ' 3/4');
+  q := regexp_replace(q, '(\d+\s*[x*]\s*)?\d+(\.\d+)?\s*sq\.?\s*mm\y', ' ', 'g');   -- cable sq mm is not a size
+  for m in select regexp_matches(q, '(?:^|[^a-z0-9])m(\d{1,2})(?![\d.])', 'g') loop
+    out := out || (m[1] || 'mm');                                               -- M8 thread = 8 mm
+  end loop;
+  q := regexp_replace(q, '(^|[^a-z0-9])m\d{1,2}(?![\d.])', '\1 ', 'g');
+  for m in select regexp_matches(q, '(\d+(?:\.\d+)?)\s*-?\s*mm\y', 'g') loop
     out := out || ((m[1]::float8)::text || 'mm');
   end loop;
-  q := regexp_replace(lower(q), '\d+(?:\.\d+)?\s*mm\y', ' ', 'g');
+  q := regexp_replace(q, '\d+(?:\.\d+)?\s*-?\s*mm\y', ' ', 'g');
   for m in select regexp_matches(q, '(?:^|[^\d/.])(\d{1,2})\s+(\d)\s*/\s*([248])(?![\d/])', 'g') loop
     out := out || (m[1] || '-' || m[2] || '/' || m[3] || 'in');                 -- 1 1/2 -> 1-1/2
   end loop;
@@ -127,7 +132,7 @@ create or replace function search_products(q text, type_slug text default null, 
 returns setof products language sql stable as $$
   with s as (
     select size_tokens(q) as sz,
-           nullif(trim(regexp_replace(regexp_replace(lower(q), '\d+(?:\.\d+)?\s*mm\y|\d{1,2}\s*[x*/]\s*\d{1,2}|\d{1,2}\s*("|''''|inch\y)', ' ', 'g'), '\s+', ' ', 'g')), '') as words
+           nullif(trim(regexp_replace(regexp_replace(lower(q), '\d+(?:\.\d+)?\s*-?\s*mm\y|\ym\d{1,2}\y|\d{1,2}\s*[x*/]\s*\d{1,2}|\d{1,2}\s*("|''''|inch\y)', ' ', 'g'), '\s+', ' ', 'g')), '') as words
   )
   select p.* from products p, s
   left join product_types t on t.slug = type_slug

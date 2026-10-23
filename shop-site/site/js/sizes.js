@@ -12,12 +12,14 @@
   }
 
   function parse(q) {
-    let s = " " + String(q).toLowerCase().replace(/''|”|″/g, '"') + " ";
+    let s = " " + String(q).toLowerCase().replace(/''|”|″/g, '"')
+      .replace(/(\d)?\s*([¼½¾])/g, (_, w, f) => `${w ? w + " " : " "}${{ "¼": "1/4", "½": "1/2", "¾": "3/4" }[f]}`) + " ";
     const sizes = [], extra = [];
     const take = (re, fn) => { s = s.replace(re, (...m) => { fn(m); return " "; }); };
     // cable: 4 sq mm, 10*4sqmm (4 cores x 10 sq mm is written both ways) -> word '4sqmm'
     take(/(?:\d+\s*[x*]\s*)?(\d+(?:\.\d+)?)\s*sq\.?\s*mm\b/g, m => extra.push(`${+m[1]}sqmm`));
-    take(/(\d+(?:\.\d+)?)\s*mm\b/g, m => sizes.push(`${+m[1]}mm`));
+    take(/(\d+(?:\.\d+)?)\s*-?\s*mm\b/g, m => sizes.push(`${+m[1]}mm`));   // 8mm, 8 mm, 8-mm
+    take(/(^|[^a-z0-9])m(\d{1,2})(?![\d.])/g, m => sizes.push(`${+m[2]}mm`));     // M8 bolt thread = 8 mm
     // whole + fraction written with a space: 1 1/2
     take(/(^|[^\d/.])(\d{1,2})\s+(\d)\s*\/\s*([248])(?![\d/])\s*(?:"|inch\b|in\b)?/g, m => sizes.push(`${m[2]}-${m[3]}/${m[4]}in`));
     take(/(^|[^\d/.])(\d{1,2})\s*[x*/]\s*(\d{1,2})(?![\d/.])\s*(?:"|inch\b|in\b)?/g, m => {

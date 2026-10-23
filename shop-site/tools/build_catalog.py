@@ -74,6 +74,24 @@ def size_tokens(dept, material, size_in, size_mm):
     return list(dict.fromkeys(out))
 
 
+def name_mm(name):
+    """mm sizes written in the item name: '8mm', '8 mm', 'M8' (bolt thread)."""
+    out = [f"{float(m):g}mm" for m in re.findall(r"(?<![\d.])(\d+(?:\.\d+)?)\s*-?\s*mm\b", name, re.I)]
+    out += [f"{int(m)}mm" for m in re.findall(r"(?<![a-z0-9])m(\d{1,2})(?![\d.])", name, re.I)]
+    return out
+
+
+def name_inch(name, dept):
+    """Inch sizes from a pipe fitting's name when the sheet leaves them blank: '1 1/4 x 3/4" UPVC R' -> '1 1/4" x 3/4"'."""
+    if dept not in PIPE_DEPTS:
+        return ""
+    name = display_name(name)
+    m = re.match(r"\s*((?:\d+ )?\d+(?:/\d+)?)\s*\"?\s*(?:[xX*]\s*((?:\d+ )?\d+(?:/\d+)?)\s*\")?(?=\s|$)", name)
+    if not m or not (m.group(2) or '"' in name[:12]) or any(g and "/" not in g and int(g) > 6 for g in m.groups()):
+        return ""
+    return " x ".join(g + '"' for g in m.groups() if g)
+
+
 def nice_fraction(m):
     whole, frac = m.group(1), m.group(2)
     return f"{whole} {frac}"
@@ -170,8 +188,9 @@ def build(xlsx):
         it = {
             "sku": sku_of(name, seen), "n": display_name(name), "raw": name, "t": tid,
             "b": clean(r["Brand"]) or "Unbranded", "p": p, "u": clean(r["Units"]) or "pcs",
-            "a": attrs, "sz": size_tokens(d, mat, clean(r.get("Size (inch)")), clean(r.get("Size (mm)"))),
+            "a": attrs, "sz": size_tokens(d, mat, clean(r.get("Size (inch)")) or name_inch(name, d), clean(r.get("Size (mm)"))) + name_mm(name),
         }
+        it["sz"] = list(dict.fromkeys(it["sz"]))
         if mrp > p:
             it["mrp"] = mrp
         if mat:
