@@ -56,8 +56,32 @@ The same rules are in `site/js/sizes.js` (browser) and `size_tokens()` in `db/sc
 
 ## Updating items and prices
 
-Change the spreadsheet, run step 1 again, and (once on Supabase) run the new `seed.sql`.
-Items marked "needs review" in the spreadsheet still show; their category may be fixed later.
+One click: double-click **Update website.command** (Mac).
+
+Keep these in a `my-data` folder next to it (the folder is never uploaded to GitHub):
+
+| File | What it is |
+| --- | --- |
+| `website_items.xlsx` | Your website item list. This is the master for the website. |
+| `item.xlsx` | Optional. A fresh item export from Busy. Brings in new items and new prices. |
+| `database.txt` | Optional. The Supabase connection string, once the live site exists. |
+
+What you can change in `website_items.xlsx`:
+
+- **All Items → Show on website**: set an item to *No* to hide it. *Yes* brings it back.
+- **Website Settings**: switch a whole department or brand off (*No*). You can also choose whether new items from Busy show straight away, and whether items no longer in Busy are hidden.
+- Prices, names, categories (Department / Group / Product Type) and filter values can be edited directly.
+
+What the click does:
+
+1. With `item.xlsx`: updates prices, MRP and units, sorts new items into categories (marked *new* in the Check column, listed on the Needs Review sheet) and notes items that are no longer in Busy.
+2. Saves the item list (the old copy goes to `my-data/backups`).
+3. Rebuilds the website from the items that should show.
+4. With `database.txt`: updates Supabase. Orders, stock, photos and descriptions are kept. Hidden items are switched off, never deleted.
+5. Opens the website on your computer to check, and writes `my-data/update-report.txt`.
+
+The first run takes a minute longer while it sets itself up. Without the double-click:
+`python3 tools/update_website.py my-data/website_items.xlsx --busy my-data/item.xlsx --db my-data/database.txt`
 
 ## Tests
 

@@ -265,7 +265,9 @@
     $("#logo-tag").textContent = CFG.tagline;
     $("#hours").textContent = CFG.hours ? "· " + CFG.hours : "";
     $("#lang-btn").textContent = state.lang === "en" ? "தமிழ்" : "English";
-    $("#search-input").placeholder = t("search");
+    // the item count follows the list ("8,000+"), so hiding items keeps the wording true
+    const approx = (ITEMS.length >= 1000 ? Math.floor(ITEMS.length / 1000) * 1000 : ITEMS.length).toLocaleString("en-IN");
+    $("#search-input").placeholder = t("search").replace("8,000", approx);
     $("#gst-toggle").checked = state.exGst;
     $$("[data-t]").forEach(el => { el.textContent = t(el.dataset.t); });
     $$(".pin-label").forEach(el => { el.textContent = state.pin ? `PIN ${state.pin}` : t("store"); });
@@ -496,7 +498,7 @@
       <section class="hero">
         <div class="hero-main">
           <h2>Everything for the job,<br>ready at the counter</h2>
-          <p>${ITEMS.length.toLocaleString("en-IN")} items in electrical, plumbing, paint, tools, motors and pumps. Reserve online, collect in the shop or get it delivered.</p>
+          <p>${ITEMS.length.toLocaleString("en-IN")} items in ${esc(DEPTS.map(d => d.name.toLowerCase()).join(", ").replace(/, ([^,]*)$/, " and $1"))}. Reserve online, collect in the shop or get it delivered.</p>
           <a class="btn btn-amber" href="#/d/plumbing">Shop plumbing</a> <a class="btn btn-amber" href="#/d/electrical">Shop electrical</a>
         </div>
         <div class="hero-side">

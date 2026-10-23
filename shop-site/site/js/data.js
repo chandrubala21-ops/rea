@@ -35,12 +35,13 @@
       outTypes[it.t].count++;
       return it;
     });
+    // departments and groups whose items are all switched off are left out of the menu
     const depts = deps.map(d => ({
       name: d.name, ta: d.name_ta, slug: d.slug,
       groups: groups.filter(g => g.department_id === d.id).map(g => ({
-        name: g.name, slug: g.slug, types: types.filter(t => t.group_id === g.id).map(t => tIndex.get(t.id)),
-      })),
-    }));
+        name: g.name, slug: g.slug, types: types.filter(t => t.group_id === g.id).map(t => tIndex.get(t.id)).filter(i => outTypes[i].count),
+      })).filter(g => g.types.length),
+    })).filter(d => d.groups.length);
     const local = await fetch("data/catalog.json").then(r => r.json()).catch(() => ({}));
     return { depts, types: outTypes, items, colours: local.colours || {} };
   }
