@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Senthil Andavar Hardwares</title>
+  <meta name="description" content="Hardware, electrical, plumbing, paint, tools, motors and pumps. Reserve online and collect, or order in bulk by size.">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230b3d6e'/%3E%3Cpath d='M9 22l9-9 3 3-9 9H9z' fill='%23f59e0b'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap topbar-in">
+      <span><a href="#/help" data-t="help">Help &amp; contact</a> <span class="hide-xs" id="hours"></span></span>
+      <span class="topbar-right">
+        <label class="gst"><span data-t="incGst">inc GST</span><input type="checkbox" id="gst-toggle" aria-label="Show prices without GST"><span data-t="exGst">ex GST</span></label>
+        <button class="lang" id="lang-btn" type="button" aria-label="Change language">தமிழ்</button>
+      </span>
+    </div>
+  </div>
+
+  <header class="header">
+    <div class="wrap header-in">
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Open menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="26" height="26"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </button>
+      <a class="logo" href="#/" aria-label="Home">
+        <svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true"><rect width="40" height="40" rx="8" fill="#f59e0b"/><path d="M11 28l11-11 4 4-11 11h-4z" fill="#0b3d6e"/><circle cx="26" cy="14" r="5" fill="none" stroke="#0b3d6e" stroke-width="3"/></svg>
+        <span><b id="logo-name"></b><small id="logo-tag"></small></span>
+      </a>
+      <form class="search" id="search-form" role="search">
+        <input id="search-input" type="search" autocomplete="off" aria-label="Search">
+        <button type="submit" aria-label="Search">
+          <svg viewBox="0 0 24 24" width="22" height="22"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.6"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+        </button>
+        <div class="suggest" id="suggest" hidden></div>
+      </form>
+      <div class="hdr-icons">
+        <a class="hdr-btn hide-sm" href="#/quick-order">
+          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 5h16M4 10h16M4 15h10M4 20h7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <span data-t="quickOrder">Quick order</span>
+        </a>
+        <a class="hdr-btn hide-sm" href="#/account">
+          <svg viewBox="0 0 24 24" width="26" height="26"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M4 21c1-4.5 4.5-6.5 8-6.5s7 2 8 6.5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>
+          <span data-t="account">Account</span>
+        </a>
+        <a class="hdr-btn" href="#/store">
+          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 22s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="10" r="2.6" fill="currentColor"/></svg>
+          <span data-t="store">Our shop</span>
+        </a>
+        <a class="hdr-btn basket-btn" href="#/basket">
+          <svg viewBox="0 0 24 24" width="26" height="26"><path d="M3 4h2.5l2.2 11h10.8L21 7H6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/><circle cx="9" cy="19.5" r="1.6" fill="currentColor"/><circle cx="17" cy="19.5" r="1.6" fill="currentColor"/></svg>
+          <span data-t="basket">Basket</span>
+          <em id="basket-count">0</em>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <nav class="nav" id="nav" aria-label="Departments">
+    <div class="wrap"><ul class="nav-list" id="nav-list"></ul></div>
+    <div class="mega" id="mega" hidden></div>
+  </nav>
+
+  <div class="promise"><div class="wrap promise-in" id="promise"></div></div>
+  <a class="promo" id="promo" href="#/quick-order"></a>
+
+  <main class="wrap" id="main" tabindex="-1"><p class="loading">Loading…</p></main>
+
+  <footer class="footer">
+    <div class="wrap footer-in" id="footer"></div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/sizes.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
